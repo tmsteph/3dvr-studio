@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>OpenStudio - Universal Editor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; font-family: sans-serif; }
+
+    #app {
+      display: grid;
+      grid-template-columns: 200px 1fr 200px;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+      grid-template-areas:
+        "sidebar header properties"
+        "sidebar workspace properties"
+        "footer footer footer";
+    }
+
+    nav#sidebar {
+      grid-area: sidebar;
+      background: #1f1f1f;
+      color: white;
+      padding: 1rem;
+    }
+
+    nav#sidebar h2 { margin-bottom: 1rem; }
+    nav#sidebar ul { list-style: none; }
+    nav#sidebar li {
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 4px;
+    }
+    nav#sidebar li:hover {
+      background: #333;
+    }
+
+    header {
+      grid-area: header;
+      background: #333;
+      color: white;
+      padding: 1rem;
+    }
+
+    main#workspace {
+      grid-area: workspace;
+      background: #222;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    canvas {
+      border: 2px solid #fff;
+      background: white;
+    }
+
+    aside#properties-panel, aside#tools-panel {
+      padding: 1rem;
+      color: white;
+      background: #2d2d2d;
+    }
+
+    aside#properties-panel {
+      grid-area: properties;
+    }
+
+    footer#footer {
+      grid-area: footer;
+      background: #1a1a1a;
+      color: white;
+      padding: 0.5rem;
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+    }
+
+    button {
+      padding: 0.5rem 1rem;
+      background: #444;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: #666;
+    }
+
+    input[type="color"] {
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div id="app">
+    <nav id="sidebar">
+      <h2>OpenStudio</h2>
+      <ul>
+        <li onclick="switchMode('image')">Image</li>
+        <li onclick="switchMode('audio')">Audio</li>
+        <li onclick="switchMode('video')">Video</li>
+        <li onclick="switchMode('vector')">Vector</li>
+        <li onclick="switchMode('text')">Text</li>
+      </ul>
+    </nav>
+
+    <header>
+      <h1 id="mode-title">Image Editor</h1>
+    </header>
+
+    <main id="workspace">
+      <canvas id="canvas" width="640" height="480"></canvas>
+    </main>
+
+    <aside id="properties-panel">
+      <h3>Properties</h3>
+      <input type="color" id="colorPicker" value="#000000" />
+    </aside>
+
+    <footer id="footer">
+      <button onclick="clearCanvas()">New</button>
+      <button onclick="downloadCanvas()">Export</button>
+      <input type="file" accept="image/*" onchange="loadImage(event)" />
+    </footer>
+  </div>
+
+  <script>
+    const canvas = document.getElementById("canvas");
+    const ctx = canvas.getContext("2d");
+    let drawing = false;
+
+    canvas.addEventListener("mousedown", () => drawing = true);
+    canvas.addEventListener("mouseup", () => drawing = false);
+    canvas.addEventListener("mouseout", () => drawing = false);
+    canvas.addEventListener("mousemove", draw);
+
+    function draw(e) {
+      if (!drawing) return;
+      const color = document.getElementById("colorPicker").value;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 3;
+      ctx.lineCap = "round";
+      ctx.lineTo(e.offsetX, e.offsetY);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(e.offsetX, e.offsetY);
+    }
+
+    function clearCanvas() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+
+    function downloadCanvas() {
+      const link = document.createElement('a');
+      link.download = 'drawing.png';
+      link.href = canvas.toDataURL();
+      link.click();
+    }
+
+    function loadImage(e) {
+      const file = e.target.files[0];
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const img = new Image();
+        img.onload = function() {
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        }
+        img.src = evt.target.result;
+      }
+      reader.readAsDataURL(file);
+    }
+
+    function switchMode(mode) {
+      document.getElementById("mode-title").innerText = `${mode.charAt(0).toUpperCase() + mode.slice(1)} Editor`;
+      // Swap logic for other editors can go here
+      alert(`Switched to ${mode} mode (coming soon)`);
+    }
+  </script>
+</body>
+</html>
